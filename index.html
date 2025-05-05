@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="bn"> <!-- Added lang attribute -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>সোশ্যাল মিডিয়া পোস্ট ম্যানেজমেন্ট</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet"> <!-- Added Noto Sans Bengali -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"> <!-- FontAwesome Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> <!-- html2canvas for screenshots -->
+    <style>
+        /* Theme Colors */
+        :root {
+            --primary-color: #0d47a1; /* Dark Blue */
+            --secondary-color: #1565c0; /* Medium Blue */
+            --accent-color: #2e7d32; /* Dark Green */
+            --background-gradient-start: #e3f2fd; /* Light Blue */
+            --background-gradient-end: #bbdefb; /* Lighter Blue */
+            --text-color: #212121; /* Dark Grey */
+            --light-text-color: #424242; /* Medium Grey */
+            --border-color: #e0e0e0; /* Light Grey */
+            --hover-bg: #eef; /* Very Light Blue */
+            --focus-glow: rgba(33, 150, 243, 0.5); /* Blue Glow */
+
+            --status-completed: #388e3c; /* Dark Green */
+            --status-partial: #fbc02d; /* Dark Yellow/Orange */
+            --status-not-started: #d32f2f; /* Dark Red */
+            --time-low: #d32f2f; /* Dark Red */
+            --time-medium: #fbc02d; /* Dark Yellow/Orange */
+        }
+
+
+        /* General Styles */
+        body {
+            font-family: 'Noto Sans Bengali', 'Roboto', sans-serif; /* Prioritize Bengali font */
+            margin: 0;
+            padding: 25px;
+            background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%); /* Subtle gradient background */
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden; /* Prevent main body horizontal scroll */
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+            position: relative; /* Needed for absolute positioning of Home button */
+            background-color: #fff; /* Add background to container for screenshot */
+            padding-top: 50px; /* Adjust padding for sticky header */
+            border-radius: 10px;
+             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+             min-height: 90vh; /* Ensure container takes up most of the viewport height */
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            animation: fadeInDown 1s ease-out;
+            letter-spacing: 0.5px;
+        }
+        h2 {
+            margin-top: 40px;
+            margin-bottom: 25px;
+            color: var(--secondary-color);
+        }
+
+        /* Home Button Style */
+        .home-button {
+            position: absolute;
+            top: 20px;
+            left: 15px; /* Adjust based on container padding */
+            font-size: 1.8em; /* Larger icon */
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: transform 0.2s ease, color 0.2s ease;
+            z-index: 20; /* Ensure it's above other content */
+        }
+        .home-button:hover {
+            transform: scale(1.1);
+            color: var(--accent-color);
+        }
+         /* Hide on print and screenshot */
+         @media print, screen and (max-width: 9999px) { /* Hide on screen capture by default */
+             .home-button, .action-buttons, .exclude-screenshot {
+                 display: none !important;
+             }
+         }
+          /* Make sure they are visible normally */
+          body:not(.screenshot-mode) .home-button,
+          body:not(.screenshot-mode) .action-buttons {
+               display: flex; /* Use flex for action buttons */
+               justify-content: center;
+               flex-wrap: wrap; /* Allow buttons to wrap */
+          }
+           .action-buttons {
+               gap: 15px; /* Space between buttons */
+           }
+
+
+        /* Table Styles (Facebook Section) */
+        .table-container {
+             overflow-x: auto; /* Enable scrolling for wide tables */
+             margin-bottom: 40px;
+             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); /* Lighter shadow */
+             border-radius: 8px;
+             background-color: #fff;
+             animation: fadeInUp 1.2s ease-out;
+             position: relative; /* Needed for sticky elements */
+             border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px; /* Minimum width for the table */
+             /* Ensure white background behind sticky cells */
+            background-color: #fff;
+        }
+
+        th, td {
+            padding: 14px 18px; /* Adjusted padding */
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, transform 0.05s ease; /* Faster transform */
+            white-space: nowrap; /* Prevent text wrapping in cells */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: middle; /* Vertically center content */
+        }
+
+         th {
+            background-color: var(--hover-bg); /* Light background for headers */
+            font-weight: 600;
+            color: var(--primary-color);
+            position: sticky;
+            top: 0; /* Stick to the top when scrolling */
+            z-index: 10; /* Higher z-index */
+            border-bottom: 2px solid var(--secondary-color); /* Stronger border below header */
+        }
+
+        /* Sticky first column */
+        th:first-child, td:first-child {
+            position: sticky;
+            left: 0;
+            background-color: #fff; /* Ensure white background when sticky */
+            z-index: 11; /* Keep page name cell sticky and above other sticky th */
+             min-width: 120px; /* Give sticky column enough width */
+             box-shadow: 2px 0 3px rgba(0,0,0,0.05); /* Subtle shadow to separate from content */
+        }
+         th:first-child {
+             z-index: 12; /* Page Name Header needs to be on top of sticky category headers too */
+         }
+         td:first-child {
+              font-weight: 500;
+              color: var(--light-text-color);
+         }
+
+
+        tr:hover {
+            background-color: var(--hover-bg);
+        }
+         tr:active {
+             transform: scale(0.995); /* Softer press effect */
+         }
+
+
+        th.category-header {
+             background-color: var(--background-gradient-start); /* Lighter background for category headers */
+             text-align: center; /* Center category group titles */
+             border-bottom: 1px solid var(--border-color); /* Add a border below category headers */
+             color: var(--secondary-color);
+        }
+        th.category-header + th.category-header {
+             border-left: 1px solid var(--border-color); /* Separator between category groups */
+        }
+         /* Dashed border between category groups in data rows */
+         td[data-category="reels"] + td[data-category]:not(:first-child),
+         td[data-category="post"] + td[data-category]:not(:first-child) {
+              border-left: 1px dashed var(--border-color); /* Subtle visual separator between categories */
+         }
+         /* Total columns - slightly different styling */
+         td:nth-child(odd):not(:first-child, :last-child) { /* Total columns */
+             background-color: #f9f9f9; /* Very light grey */
+         }
+
+
+        /* Editable Cell Styling */
+        td[contenteditable="true"] {
+            cursor: text; /* Indicate editable */
+            border: 1px dashed transparent;
+            transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+            background-color: #fff; /* Ensure white background for editable cells */
+             min-width: 40px; /* Give some space for editing */
+             text-align: center; /* Center the number */
+             padding: 10px 8px; /* Adjust padding inside editable cell */
+             border-radius: 4px;
+        }
+
+        td[contenteditable="true"]:hover {
+            border-color: var(--border-color);
+        }
+
+        td[contenteditable="true"]:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            background-color: #e3f2fd; /* Light blue focus background */
+            box-shadow: 0 0 5px var(--focus-glow); /* Glow effect on focus */
+        }
+
+        /* Dynamic Styles based on Data (Table) */
+        .done-status {
+            font-weight: 600;
+        }
+
+        .done-status.completed {
+            color: var(--status-completed); /* Green */
+        }
+
+        .done-status.partial {
+            color: var(--status-partial); /* Orange */
+        }
+
+        .done-status.not-started {
+             color: var(--status-not-started); /* Red */
+        }
+         td:last-child { /* More Time cell */
+              font-weight: 500;
+              text-align: center; /* Center the "X দিন" text */
+              color: var(--light-text-color); /* Default time color */
+         }
+         td:last-child.low-time {
+              color: var(--time-low); /* Red */
+         }
+          td:last-child.medium-time {
+              color: var(--time-medium); /* Orange */
+         }
+
+
+        /* Card Section Styles */
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap; /* Allow cards to wrap to the next row */
+            gap: 20px; /* Space between cards */
+            justify-content: center; /* Center cards when they don't fill a row */
+             margin-bottom: 40px;
+        }
+
+        .platform-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            padding: 18px; /* Adjusted padding */
+            width: 220px; /* Adjusted width for cards */
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between; /* Space out content vertically */
+            position: relative; /* For potential icons/status indicators */
+             animation: fadeInScale 0.8s ease-out; /* Animation for cards */
+             min-height: 130px; /* Ensure minimum height */
+             border: 1px solid var(--border-color);
+        }
+
+        .platform-card:hover {
+            transform: translateY(-5px); /* Lift effect on hover */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .platform-card h3 {
+            margin-top: 0;
+            margin-bottom: 12px; /* Adjusted margin */
+            color: var(--primary-color);
+            font-size: 1.1em; /* Slightly smaller font */
+            font-weight: 700;
+        }
+
+        .card-stats {
+            display: flex;
+            justify-content: space-around; /* Space out target and done */
+            width: 100%;
+            margin-bottom: 8px; /* Adjusted margin */
+             border-top: 1px solid #eee; /* Subtle separator */
+             padding-top: 8px;
+        }
+
+        .card-stat-item {
+            flex-grow: 1; /* Allow items to grow */
+            text-align: center;
+        }
+         .card-stat-item:first-child {
+             border-right: 1px solid #eee; /* Separator between Target and Done */
+         }
+
+
+        .card-stat-label {
+            font-size: 0.85em; /* Slightly smaller */
+            color: var(--light-text-color);
+            display: block;
+             margin-bottom: 4px; /* Adjusted margin */
+        }
+
+        .card-stat-value {
+            font-size: 1.3em; /* Slightly smaller */
+            font-weight: 700;
+            color: var(--text-color); /* Default value color */
+        }
+
+         .editable-done-card {
+            cursor: text;
+            border: 1px dashed transparent;
+            transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+            padding: 2px 5px;
+            display: inline-block;
+            min-width: 30px;
+            text-align: center;
+            background-color: #fff;
+            border-radius: 4px;
+            color: var(--text-color); /* Inherit value color */
+         }
+
+         .editable-done-card:hover {
+             border-color: var(--border-color);
+         }
+          .editable-done-card:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            background-color: #e3f2fd;
+             box-shadow: 0 0 5px var(--focus-glow);
+         }
+
+         .card-progress {
+             font-size: 0.85em;
+             color: var(--light-text-color); /* Default progress text color */
+              margin-top: auto; /* Push progress to the bottom */
+              padding-top: 5px;
+               border-top: 1px solid #eee; /* Subtle separator */
+               width: 100%; /* Ensure line covers width */
+         }
+
+
+        /* Dynamic Styles for Cards */
+        .platform-card.completed .card-stat-value,
+        .platform-card.completed .editable-done-card,
+        .platform-card.completed .card-progress {
+            color: var(--status-completed); /* Green */
+            font-weight: 700;
+        }
+
+
+        .platform-card.partial .card-stat-value,
+        .platform-card.partial .editable-done-card,
+         .platform-card.partial .card-progress {
+            color: var(--status-partial); /* Orange */
+            font-weight: 700;
+        }
+
+
+        .platform-card.not-started .card-stat-value,
+        .platform-card.not-started .editable-done-card,
+         .platform-card.not-started .card-progress {
+             color: var(--status-not-started); /* Red */
+             font-weight: 700;
+         }
+
+
+        /* Animations */
+        @keyframes fadeInDown {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInScale {
+            0% { opacity: 0; transform: scale(0.95); } /* Slightly less scale */
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+
+         /* Highlight animation on data update */
+         @keyframes highlight {
+             0% { background-color: #fff9c4; } /* Lighter yellow */
+             50% { background-color: #fff9c4; }
+             100% { background-color: transparent; }
+         }
+         .cell-update-highlight {
+             animation: highlight 0.6s ease;
+         }
+
+         /* Screenshot mode styles */
+         body.screenshot-mode .container {
+            box-shadow: none; /* Remove shadow for cleaner capture */
+            border-radius: 0;
+            padding-top: 25px; /* Remove extra padding */
+            min-height: auto; /* Allow container to shrink to content */
+         }
+         body.screenshot-mode .table-container,
+         body.screenshot-mode .platform-card {
+             box-shadow: none;
+             border-radius: 0;
+             border: 1px solid #ccc; /* Add border back for definition */
+         }
+         body.screenshot-mode th,
+         body.screenshot-mode td {
+             border-bottom: 1px solid #ddd;
+             position: static !important; /* Disable sticky */
+             left: auto !important;
+             top: auto !important;
+             background-color: #fff !important; /* Ensure white background */
+             z-index: auto !important;
+         }
+          body.screenshot-mode th {
+               background-color: #eee !important;
+          }
+          body.screenshot-mode th.category-header {
+              background-color: #ddd !important;
+          }
+         body.screenshot-mode td[contenteditable="true"] {
+              border: none !important; /* Remove editable border */
+              background-color: #fff !important;
+              box-shadow: none !important;
+         }
+         body.screenshot-mode .platform-card {
+              page-break-inside: avoid;
+         }
+
+
+         /* Print Specific Styles (For window.print) */
+         @media print {
+             body {
+                 padding: 10px;
+                 background: none;
+                 color: #000;
+                 font-size: 10pt; /* Smaller font for print */
+             }
+              body .container {
+                   box-shadow: none !important;
+                   border-radius: 0 !important;
+                   padding: 0 !important;
+                   min-height: auto !important;
+              }
+             h1, h2 {
+                 color: #000 !important;
+                 margin-bottom: 15px !important;
+                 animation: none !important;
+             }
+             .table-container, .platform-card {
+                  box-shadow: none !important;
+                  border-radius: 0 !important;
+                  border: 1px solid #ccc !important;
+                  animation: none !important;
+                  margin-bottom: 20px !important;
+             }
+             table {
+                 background-color: #fff !important;
+             }
+             th, td {
+                 padding: 8px 12px !important;
+                 border-bottom: 1px solid #ddd !important;
+                 white-space: normal !important;
+                 overflow: visible !important;
+                 text-overflow: initial !important;
+                 position: static !important;
+                 left: auto !important;
+                 top: auto !important;
+                 background-color: #fff !important;
+                 z-index: auto !important;
+             }
+              th {
+                  background-color: #eee !important;
+              }
+             td[data-category]:not(:first-child) {
+                  border-left: 1px solid #ddd !important;
+             }
+             th.category-header {
+                  border-bottom: 1px solid #ccc !important;
+                  background-color: #ddd !important;
+             }
+              th.category-header + th.category-header {
+                  border-left: 1px solid #ccc !important;
+             }
+             td:nth-child(odd):not(:first-child, :last-child) {
+                  background-color: #f9f9f9 !important;
+             }
+             td[contenteditable="true"] {
+                  border: none !important;
+                  background-color: #fff !important;
+                  box-shadow: none !important;
+             }
+              .platform-card {
+                  width: 200px !important;
+                  page-break-inside: avoid !important;
+                  display: inline-block !important;
+                  vertical-align: top !important;
+                  margin-right: 10px !important;
+                  padding: 10px !important;
+              }
+              .platform-card h3 {
+                  font-size: 1em !important;
+                  margin-bottom: 8px !important;
+              }
+             .cards-container {
+                 justify-content: flex-start !important;
+                 gap: 10px !important;
+             }
+             .card-stats {
+                 justify-content: center !important;
+                 padding-top: 5px !important;
+                 margin-bottom: 5px !important;
+             }
+             .card-stat-item {
+                  padding: 0 5px !important;
+                  font-size: 0.9em !important;
+             }
+              .card-stat-item:first-child {
+                  border-right: 1px solid #ddd !important;
+             }
+             .card-stat-label {
+                 font-size: 0.8em !important;
+                 margin-bottom: 2px !important;
+             }
+              .card-stat-value,
+              .editable-done-card {
+                   font-size: 1em !important;
+                   font-weight: bold !important;
+              }
+             .card-progress {
+                 margin-top: 5px !important;
+                 font-size: 0.8em !important;
+                  padding-top: 5px !important;
+             }
+              /* Force colors for print */
+             .done-status.completed,
+             .platform-card.completed .card-stat-value,
+             .platform-card.completed .editable-done-card,
+             .platform-card.completed .card-progress {
+                 color: green !important;
+             }
+             .done-status.partial,
+             .platform-card.partial .card-stat-value,
+             .platform-card.partial .editable-done-card,
+             .platform-card.partial .card-progress {
+                 color: orange !important;
+             }
+             .done-status.not-started,
+             .platform-card.not-started .card-stat-value,
+             .platform-card.not-started .editable-done-card,
+             .platform-card.not-started .card-progress {
+                 color: red !important;
+             }
+              td:last-child.low-time {
+                  color: red !important;
+              }
+              td:last-child.medium-time {
+                  color: orange !important;
+              }
+         }
+
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+         <!-- Home Button (Excluded from Screenshot & Print) -->
+         <div class="home-button exclude-screenshot" title="উপরে যান" role="button" aria-label="উপরে যান">
+             <i class="fas fa-home"></i>
+         </div>
+
+        <h1>সোশ্যাল মিডিয়া পোস্ট ম্যানেজমেন্ট টুল</h1>
+
+        <!-- Action Buttons (Excluded from Screenshot & Print) -->
+        <div class="action-buttons exclude-screenshot">
+            <button id="printPageButton" title="পেজের বর্তমান লেআউট প্রিন্ট করুন অথবা PDF হিসেবে সেভ করুন">
+                 <i class="fas fa-print"></i> পেজ প্রিন্ট / সেভ PDF
+            </button>
+             <button id="screenshotButton" title="পেজের দৃশ্যমান অংশের একটি ইমেজ ডাউনলোড করুন">
+                 <i class="fas fa-camera"></i> স্ক্রিনশট
+             </button>
+             <button id="printDataButton" title="ডেটা একটি নতুন উইন্ডোতে প্রিন্ট করার জন্য খুলুন">
+                  <i class="fas fa-table"></i> ডেটা প্রিন্ট
+             </button>
+            <!-- <button id="resetButton">ডাটা রিসেট করুন</button> --> <!-- Optional Reset Button -->
+        </div>
+
+
+        <h2>ফেসবুক পেজ ম্যানেজমেন্ট</h2>
+         <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th rowspan="2">পেজের নাম</th>
+                        <th colspan="2" class="category-header">রিলস</th>
+                        <th colspan="2" class="category-header">পোস্ট</th>
+                        <th colspan="2" class="category-header">স্টোরি</th>
+                        <th rowspan="2">আর সময় আছে</th>
+                    </tr>
+                     <tr>
+                        <th>মোট</th>
+                        <th>সম্পন্ন</th>
+                        <th>মোট</th>
+                        <th>সম্পন্ন</th>
+                        <th>মোট</th>
+                        <th>সম্পন্ন</th>
+                    </tr>
+                </thead>
+                <tbody id="facebookTableBody">
+                    <!-- Facebook Data will be rendered here by JavaScript -->
+                </tbody>
+            </table>
+         </div>
+
+
+        <h2>অন্যান্য প্ল্যাটফর্ম</h2>
+        <div class="cards-container" id="otherPlatformsContainer">
+            <!-- Other Platforms Data will be rendered here by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Unique key for localStorage
+        const localStorageKey = 'socialMediaPostData';
+        const facebookTableBody = document.getElementById('facebookTableBody');
+        const otherPlatformsContainer = document.getElementById('otherPlatformsContainer');
+         const printPageButton = document.getElementById('printPageButton'); // Renamed
+         const screenshotButton = document.getElementById('screenshotButton');
+         const printDataButton = document.getElementById('printDataButton'); // New button
+         const homeButton = document.querySelector('.home-button');
+         const container = document.querySelector('.container'); // Get the container for screenshot
+         // const resetButton = document.getElementById('resetButton'); // For optional reset
+
+         console.log("Script started.");
+
+        // Define Facebook categories
+        const facebookCategories = ['reels', 'post', 'story'];
+        const facebookCategoryLabels = {
+            reels: 'রিলস',
+            post: 'পোস্ট',
+            story: 'স্টোরি'
+        };
+
+         // Define Other Platforms and their initial structure as an ARRAY of accounts
+         const initialOtherPlatformsStructure = [
+             { id: 'tiktok1', platform: 'TikTok', name: 'TikTok U Tech', target: 2, done: 0 },
+             { id: 'tiktok2', platform: 'TikTok', name: 'TikTok Your TopUp Center ', target: 2, done: 0 },
+             { id: 'insta1', platform: 'Instagram', name: 'Instagram U Tech', target: 1, done: 0 },
+             { id: 'insta2', platform: 'Instagram', name: 'Instagram Your TopUp Center ', target: 1, done: 0 },
+             { id: 'youtube', platform: 'YouTube', name: 'YouTube', target: 2, done: 0 },
+             { id: 'blogspot', platform: 'Blog', name: 'ব্লগ পোস্ট', target: 1, done: 0 },
+             { id: 'twitter', platform: 'Twitter', name: 'Twitter (Posts)', target: 1, done: 0 }
+         ];
+
+
+        // Default initial data structure for 5 Facebook pages & other platforms (using the array)
+        const defaultDataStructure = {
+             facebookPages: [
+                {
+                    name: "U Tech",
+                    categories: {
+                        reels: { total: 1, done: 0 },
+                        post: { total: 2, done: 0 },
+                        story: { total: 1, done: 0 }
+                    }
+                },
+                {
+                    name: "YTC",
+                    categories: {
+                        reels: { total: 1, done: 0 },
+                        post: { total: 2, done: 0 },
+                        story: { total: 1, done: 0 }
+                    }
+                },
+                {
+                    name: "Quantum",
+                    categories: {
+                         reels: { total: 1, done: 0 },
+                        post: { total: 1, done: 0 },
+                        story: { total: 1, done: 0 }
+                    }
+                },
+                {
+                    name: "GreenShell",
+                    categories: {
+                         reels: { total: 1, done: 0 },
+                        post: { total: 1, done: 0 },
+                        story: { total: 0, done: 0 }
+                    }
+                },
+                {
+                    name: "WeUx",
+                    categories: {
+                        reels: { total: 1, done: 0 },
+                        post: { total: 1, done: 0 },
+                        story: { total: 0, done: 0 }
+                    }
+                }
+            ],
+            otherPlatforms: JSON.parse(JSON.stringify(initialOtherPlatformsStructure)) // Deep copy default structure (now an array)
+        };
+
+
+        let socialMediaData = {}; // Object to hold all current data
+
+        // Function to load data from local storage
+        function loadData() {
+            console.log("Attempting to load data from localStorage...");
+            const storedData = localStorage.getItem(localStorageKey);
+            if (storedData) {
+                try {
+                    const parsedData = JSON.parse(storedData);
+                    console.log("Data parsed successfully:", parsedData);
+
+                    // --- Validate and merge Data (Facebook Pages) ---
+                    // Use default pages as a base structure, add/merge data from storage
+                    const validFacebookPages = defaultDataStructure.facebookPages.map(defaultPage => {
+                        // Find the corresponding page in stored data, if it exists and has the same name
+                        const storedPage = (parsedData.facebookPages && Array.isArray(parsedData.facebookPages)) ? parsedData.facebookPages.find(p => p.name === defaultPage.name) : null;
+                        const page = storedPage ? JSON.parse(JSON.stringify(storedPage)) : JSON.parse(JSON.stringify(defaultPage)); // Use a deep copy of stored if found, else deep copy of default
+
+                        // Validate/Ensure categories structure for existing/default page
+                        if (typeof page.categories !== 'object' || page.categories === null) {
+                            console.warn(`Page "${page.name}" from storage has invalid categories structure. Resetting to default.`);
+                            page.categories = JSON.parse(JSON.stringify(defaultPage.categories)); // Reset categories using default
+                        }
+
+                        facebookCategories.forEach(category => {
+                            // Ensure each category exists with correct structure, prioritizing stored values if valid
+                            const defaultCategoryData = defaultPage.categories[category] || { total: 0, done: 0 };
+                             const storedCategoryData = page.categories[category]; // Check the 'page' variable (which is either stored or default)
+
+                            if (!storedCategoryData || typeof storedCategoryData !== 'object') {
+                                console.warn(`Page "${page.name}" missing or invalid category "${category}" in storage/merged data. Adding/resetting default.`);
+                                page.categories[category] = JSON.parse(JSON.stringify(defaultCategoryData)); // Reset this specific category
+                            } else {
+                                 // Validate numbers for 'total' and 'done' within the existing category object
+                                 storedCategoryData.total = parseInt(storedCategoryData.total, 10);
+                                if (isNaN(storedCategoryData.total) || storedCategoryData.total < 0) {
+                                    console.warn(`Page "${page.name}", Category "${category}": Invalid stored total (${storedCategoryData.total}). Reverting to default (${defaultCategoryData.total}).`);
+                                    storedCategoryData.total = defaultCategoryData.total; // Revert only total
+                                }
+                                 storedCategoryData.done = parseInt(storedCategoryData.done, 10);
+                                if (isNaN(storedCategoryData.done) || storedCategoryData.done < 0) {
+                                    console.warn(`Page "${page.name}", Category "${category}": Invalid stored done (${storedCategoryData.done}). Reverting to 0.`);
+                                    storedCategoryData.done = 0; // Revert only done
+                                }
+                                // Ensure done <= total for Facebook pages
+                                if (storedCategoryData.done > storedCategoryData.total) {
+                                    console.warn(`Page "${page.name}", Category "${category}": Stored done (${storedCategoryData.done}) exceeds total (${storedCategoryData.total}). Setting done = total.`);
+                                    storedCategoryData.done = storedCategoryData.total;
+                                }
+                            }
+                        });
+                        return page; // Return the potentially updated page object
+                    });
+                    socialMediaData.facebookPages = validFacebookPages;
+                    console.log("Facebook pages data validated and merged:", socialMediaData.facebookPages);
+
+                    // --- Validate and merge Data (Other Platforms - Array) ---
+                     // Create a map of default platforms by ID for easy lookup
+                    const defaultPlatformsMap = initialOtherPlatformsStructure.reduce((map, platform) => {
+                         map[platform.id] = platform;
+                         return map;
+                    }, {});
+
+                     const validOtherPlatforms = [];
+                     const seenStoredIds = new Set(); // Keep track of IDs from storage that we've processed
+
+                     // 1. Process items present in default structure
+                     initialOtherPlatformsStructure.forEach(defaultPlatform => {
+                         const storedPlatform = (parsedData.otherPlatforms && Array.isArray(parsedData.otherPlatforms)) ? parsedData.otherPlatforms.find(p => p.id === defaultPlatform.id) : null;
+                         const platform = storedPlatform ? JSON.parse(JSON.stringify(storedPlatform)) : JSON.parse(JSON.stringify(defaultPlatform)); // Use deep copy of stored or default
+
+                         // Validate/Ensure structure and data types
+                         if (typeof platform.name !== 'string') {
+                             console.warn(`Platform ID "${defaultPlatform.id}" missing or invalid name in storage/merged data. Using default.`);
+                             platform.name = defaultPlatform.name || 'Unnamed Platform';
+                         }
+                         if (typeof platform.platform !== 'string') { // Ensure platform type exists
+                             platform.platform = defaultPlatform.platform || 'Other';
+                         }
+                          // Ensure ID exists (should come from default or stored)
+                         if (typeof platform.id !== 'string' || !platform.id) {
+                             console.warn(`Platform "${platform.name}": Missing or invalid ID. Generating a random one.`);
+                             platform.id = 'generated_' + Math.random().toString(36).substr(2, 9); // Generate a temporary ID
+                         }
+
+
+                         platform.target = parseInt(platform.target, 10);
+                         if (isNaN(platform.target) || platform.target < 0) {
+                             console.warn(`Platform "${platform.name}" (ID: ${platform.id}): Invalid stored target (${platform.target}). Reverting to default (${defaultPlatform.target || 0}).`);
+                             platform.target = defaultPlatform.target || 0;
+                         }
+                         platform.done = parseInt(platform.done, 10);
+                         if (isNaN(platform.done) || platform.done < 0) {
+                             console.warn(`Platform "${platform.name}" (ID: ${platform.id}): Invalid stored done (${platform.done}). Reverting to 0.`);
+                             platform.done = 0;
+                         }
+                          // Allow done > target for cards, but ensure done >= 0 handled above.
+
+                         validOtherPlatforms.push(platform);
+
+                         if (storedPlatform) { // Mark this ID as seen if it came from storage
+                             seenStoredIds.add(platform.id); // Use the validated ID
+                         }
+                     });
+
+                     // 2. Add items present in storage but NOT in default structure (forward compatibility)
+                     if (parsedData.otherPlatforms && Array.isArray(parsedData.otherPlatforms)) {
+                         parsedData.otherPlatforms.forEach(storedPlatform => {
+                             // If this stored item's ID was NOT in our default structure AND we haven't already added it during step 1
+                             if (storedPlatform.id && !defaultPlatformsMap[storedPlatform.id] && !validOtherPlatforms.some(p => p.id === storedPlatform.id)) {
+                                 console.warn(`Platform with ID "${storedPlatform.id}" found in storage but not in current default structure. Adding it.`);
+                                  // Basic validation for the structure found only in storage
+                                 if (typeof storedPlatform === 'object' && storedPlatform !== null && typeof storedPlatform.name === 'string') {
+                                      const newPlatform = JSON.parse(JSON.stringify(storedPlatform)); // Deep copy
+                                       newPlatform.target = parseInt(newPlatform.target, 10);
+                                      if (isNaN(newPlatform.target) || newPlatform.target < 0) newPlatform.target = 0;
+                                       newPlatform.done = parseInt(newPlatform.done, 10);
+                                      if (isNaN(newPlatform.done) || newPlatform.done < 0) newPlatform.done = 0;
+                                       if (typeof newPlatform.platform !== 'string') newPlatform.platform = 'Other'; // Default platform type
+
+                                      validOtherPlatforms.push(newPlatform);
+                                 } else {
+                                      console.error(`Platform with ID "${storedPlatform.id}" found in storage has invalid structure, skipping.`);
+                                 }
+                             }
+                         });
+                     }
+
+                    socialMediaData.otherPlatforms = validOtherPlatforms;
+                    console.log("Other platforms data validated and merged:", socialMediaData.otherPlatforms);
+
+                } catch (e) {
+                    console.error("Error parsing local storage data:", e);
+                    alert("ডাটা লোড করতে সমস্যা হয়েছে। ডেটা রিসেট করা হচ্ছে।");
+                    // Use deep copy of default if parsing fails
+                    socialMediaData = JSON.parse(JSON.stringify(defaultDataStructure));
+                }
+            } else {
+                // If no data in local storage, use the default data (deep copy)
+                socialMediaData = JSON.parse(JSON.stringify(defaultDataStructure));
+                console.log("No data found in local storage, using default data.");
+            }
+             console.log("Final loaded data:", socialMediaData);
+        }
+
+
+        // Function to save the current data to local storage
+        function saveData() {
+            console.log("Attempting to save data to localStorage...");
+            try {
+                 localStorage.setItem(localStorageKey, JSON.stringify(socialMediaData));
+                 console.log("Data saved successfully to local storage.");
+            } catch (e) {
+                console.error("Error saving data to local storage:", e);
+                // Check for QuotaExceededError if storage is full
+                if (e.name === 'QuotaExceededError') {
+                    alert("আপনার ব্রাউজারের লোকাল স্টোরেজ পূর্ণ। ডাটা সেভ করা যাচ্ছে না। কিছু ডাটা সরিয়ে জায়গা খালি করুন অথবা ব্রাউজার ক্যাশে এবং কুকিজ পরিষ্কার করুন।");
+                } else {
+                    alert("ডাটা সেভ করার সমস্যা হচ্ছে।");
+                }
+            }
+        }
+
+        // Function to calculate days left in the week (week starts Saturday)
+        function getDaysLeftInWeek() {
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // getDay() returns 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+
+            // Days remaining *including* today until Friday (index 5 in getDay())
+            // Using modulo logic for Sat-Fri week (Sat=0, Sun=1 ... Fri=6)
+            const saturdayBasedDayIndex = (dayOfWeek + 1) % 7;
+            return 6 - saturdayBasedDayIndex;
+        }
+
+
+        // Function to render the Facebook table body
+        function renderFacebookTable(highlightPageIndex = -1, highlightCategory = null) {
+            console.log("Rendering Facebook table...");
+            facebookTableBody.innerHTML = ''; // Clear the current table body content
+            const daysLeft = getDaysLeftInWeek(); // Calculate days left once
+
+            socialMediaData.facebookPages.forEach((page, pageIndex) => {
+                // Defensive check in case page data is bad
+                if (!page || typeof page.name !== 'string' || typeof page.categories !== 'object') {
+                     console.error("Skipping render for invalid Facebook page data:", page);
+                     return;
+                }
+
+                const row = facebookTableBody.insertRow(); // Create a new table row
+                row.dataset.pageIndex = pageIndex; // Store page index
+
+                // Cell 1: Page Name (Sticky)
+                const nameCell = row.insertCell();
+                nameCell.textContent = page.name;
+
+                // Cells for each category
+                facebookCategories.forEach(categoryKey => {
+                    const categoryData = page.categories[categoryKey];
+                    const total = categoryData ? categoryData.total : 0;
+                    const done = categoryData ? categoryData.done : 0;
+
+                    // Cell for Total Posts of category
+                    const totalCell = row.insertCell();
+                    totalCell.textContent = total;
+                    totalCell.style.fontWeight = '500';
+
+                    // Cell for Done Posts of category (Editable)
+                    const doneCell = row.insertCell();
+                    doneCell.textContent = done;
+                    doneCell.setAttribute('contenteditable', 'true');
+                    doneCell.dataset.category = categoryKey;
+                    doneCell.dataset.pageIndex = pageIndex;
+                    doneCell.classList.add('editable-done-category');
+
+
+                    // Add dynamic class based on completion status
+                    if (total > 0) {
+                         if (done >= total) {
+                            doneCell.classList.add('done-status', 'completed');
+                            doneCell.classList.remove('partial', 'not-started');
+                         } else if (done > 0) {
+                             doneCell.classList.add('done-status', 'partial');
+                             doneCell.classList.remove('completed', 'not-started');
+                         } else { // done === 0
+                             doneCell.classList.add('done-status', 'not-started');
+                             doneCell.classList.remove('completed', 'partial');
+                         }
+                     } else { // total is 0
+                          // If total is 0, completion percentage is not meaningful relative to total.
+                         doneCell.classList.remove('done-status', 'completed', 'partial', 'not-started');
+                     }
+
+
+                    // Add highlight class if this cell was just updated
+                    if (pageIndex === highlightPageIndex && categoryKey === highlightCategory) {
+                        requestAnimationFrame(() => {
+                             doneCell.classList.add('cell-update-highlight');
+                            doneCell.addEventListener('animationend', () => {
+                                doneCell.classList.remove('cell-update-highlight');
+                            }, { once: true });
+                        });
+                    }
+                });
+
+                // Cell for More Time
+                const moreTimeCell = row.insertCell();
+                moreTimeCell.textContent = daysLeft + " দিন";
+                 if (daysLeft <= 1) {
+                     moreTimeCell.classList.add('low-time');
+                 } else if (daysLeft <= 3) {
+                      moreTimeCell.classList.add('medium-time');
+                 } else {
+                      moreTimeCell.classList.remove('low-time', 'medium-time');
+                 }
+            });
+             console.log("Facebook table rendering complete.");
+        }
+
+        // Function to render the Other Platforms cards (now uses an array)
+        function renderOtherPlatformsCards(highlightAccountIndex = -1) {
+            console.log("Rendering other platforms cards...");
+            otherPlatformsContainer.innerHTML = ''; // Clear the current cards
+
+            // Iterate through the otherPlatforms ARRAY in socialMediaData
+            socialMediaData.otherPlatforms.forEach((account, accountIndex) => {
+                 // Defensive check in case account data is bad
+                 if (!account || typeof account.name !== 'string' || typeof account.platform !== 'string' || typeof account.target !== 'number' || typeof account.done !== 'number') {
+                      console.error("Skipping render for invalid other platform account data:", account);
+                      return;
+                 }
+
+                const card = document.createElement('div');
+                card.classList.add('platform-card');
+                card.dataset.accountIndex = accountIndex; // Store the ARRAY index
+
+
+                // Determine card status class based on completion percentage relative to target
+                let statusClass = '';
+                if (account.target > 0) {
+                    if (account.done >= account.target) {
+                        statusClass = 'completed';
+                    } else if (account.done > 0) {
+                        statusClass = 'partial';
+                    } else { // done === 0
+                         statusClass = 'not-started';
+                    }
+                } else if (account.done > 0) {
+                     // If target is 0 but done is > 0, treat as completed
+                     statusClass = 'completed';
+                 } else { // target is 0 and done is 0
+                     statusClass = ''; // No status class
+                 }
+
+
+                if (statusClass) {
+                     card.classList.add(statusClass);
+                } else {
+                     card.classList.remove('completed', 'partial', 'not-started'); // Ensure no old status classes remain
+                }
+
+
+                // Determine progress text based on target
+                let progressText = '';
+                if (account.target > 0) {
+                    progressText = `(${Math.min(account.done, account.target)}/${account.target}) সম্পন্ন`;
+                } else if (account.done > 0) {
+                     progressText = `(${account.done} সম্পন্ন)`; // Just show done count if target is 0
+                }
+                 // No progress text if both target and done are 0
+
+
+                card.innerHTML = `
+                    <h3>${account.name}</h3>
+                    <div class="card-stats">
+                        <div class="card-stat-item">
+                            <span class="card-stat-label">টার্গেট</span>
+                            <span class="card-stat-value">${account.target}</span>
+                        </div>
+                        <div class="card-stat-item">
+                            <span class="card-stat-label">সম্পন্ন</span>
+                             <span class="card-stat-value editable-done-card" contenteditable="true" data-account-index="${accountIndex}">${account.done}</span>
+                        </div>
+                    </div>
+                     ${progressText ? `<div class="card-progress">${progressText}</div>` : ''}
+                `;
+
+
+                 // Find the editable span within the created card HTML element
+                 const editableSpan = card.querySelector('.editable-done-card');
+                 if(editableSpan) {
+                     // console.log(`Platform Account "${account.name}": Created done span. Editable: ${editableSpan.contentEditable}. Has class: ${editableSpan.classList.contains('editable-done-card')}`);
+                 } else {
+                      console.error(`Platform Account "${account.name}": Could not find editable span!`);
+                 }
+
+
+                 // Add highlight class if this card was just updated
+                 if (accountIndex === highlightAccountIndex && editableSpan) {
+                     requestAnimationFrame(() => {
+                          editableSpan.classList.add('cell-update-highlight'); // Apply highlight to the editable span
+                         editableSpan.addEventListener('animationend', () => {
+                             editableSpan.classList.remove('cell-update-highlight');
+                         }, { once: true });
+                     });
+                 }
+
+
+                otherPlatformsContainer.appendChild(card);
+            });
+             console.log("Other platforms card rendering complete.");
+        }
+
+         // Function to capture the content as an image using html2canvas
+         function takeScreenshot() {
+             console.log("Screenshot button clicked.");
+             // Hide elements that should not be in the screenshot
+             document.body.classList.add('screenshot-mode');
+
+             // Give a brief moment for the DOM to update visibility before capturing
+             requestAnimationFrame(() => {
+                html2canvas(container, {
+                    useCORS: true, // Required if you have images from other domains (unlikely here, but good practice)
+                     scrollY: -window.scrollY, // Capture from the top of the scroll, not the current view
+                     windowWidth: document.documentElement.offsetWidth, // Capture the full width
+                     windowHeight: document.documentElement.offsetHeight // Capture the full height (including scrollable content)
+                }).then(canvas => {
+                    // Convert the canvas to a data URL
+                    const imageDataUrl = canvas.toDataURL('image/png');
+
+                    // Create a temporary link element to trigger download
+                    const link = document.createElement('a');
+                    link.href = imageDataUrl;
+                    link.download = `social_media_report_${new Date().toISOString().split('T')[0]}.png`; // Suggest a filename with date
+                    document.body.appendChild(link); // Append must happen before click for Firefox
+
+                    link.click(); // Simulate click to trigger download
+
+                    document.body.removeChild(link); // Clean up the temporary link
+
+                    // Show the hidden elements again
+                    document.body.classList.remove('screenshot-mode');
+                    console.log("Screenshot captured and download initiated.");
+
+                }).catch(error => {
+                    console.error("Error capturing screenshot:", error);
+                    alert("স্ক্রিনশট নিতে সমস্যা হয়েছে।");
+
+                    // Ensure elements are visible even if screenshot fails
+                    document.body.classList.remove('screenshot-mode');
+                });
+             });
+         }
+
+         // Function to generate and display data in a new window for printing
+         function printDataSummary() {
+             console.log("Print Data button clicked. Generating data summary.");
+
+             let dataHtml = `
+                <!DOCTYPE html>
+                <html lang="bn">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>সোশ্যাল মিডিয়া পোস্ট ম্যানেজমেন্ট ডেটা</title>
+                     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet">
+                    <style>
+                        body { font-family: 'Noto Sans Bengali', sans-serif; margin: 20px; color: #333; }
+                        h1, h2 { color: #1c2b5d; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;}
+                         h2 { margin-top: 25px; color: #4267b2; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                        th { background-color: #f2f2f2; font-weight: bold; }
+                         tbody tr:nth-child(even) { background-color: #f9f9f9; } /* Zebra striping */
+                        ul { list-style: none; padding: 0; }
+                        li { background-color: #f9f9f9; border: 1px solid #ddd; padding: 10px; margin-bottom: 8px; border-radius: 4px; }
+                         /* Styles for print */
+                         @media print {
+                             body { margin: 10mm; font-size: 10pt; }
+                              h1, h2 { page-break-after: avoid; }
+                              table { page-break-inside: avoid; }
+                              ul { page-break-inside: avoid; }
+                              li { page-break-inside: avoid; }
+                         }
+                    </style>
+                </head>
+                <body>
+                    <h1>সোশ্যাল মিডিয়া পোস্ট ম্যানেজমেন্ট - ডেটা সারাংশ</h1>
+            `;
+
+             // --- Facebook Data Table ---
+            dataHtml += `
+                <h2>ফেসবুক পেজ ডেটা</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>পেজের নাম</th>
+                            <th>রিলস (মোট)</th>
+                            <th>রিলস (সম্পন্ন)</th>
+                            <th>পোস্ট (মোট)</th>
+                            <th>পোস্ট (সম্পন্ন)</th>
+                            <th>স্টোরি (মোট)</th>
+                            <th>স্টোরি (সম্পন্ন)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            socialMediaData.facebookPages.forEach(page => {
+                // Defensive check
+                if (!page || typeof page.name !== 'string' || typeof page.categories !== 'object') return;
+
+                dataHtml += `
+                    <tr>
+                        <td>${page.name}</td>
+                        <td>${page.categories.reels?.total || 0}</td>
+                        <td>${page.categories.reels?.done || 0}</td>
+                        <td>${page.categories.post?.total || 0}</td>
+                        <td>${page.categories.post?.done || 0}</td>
+                        <td>${page.categories.story?.total || 0}</td>
+                        <td>${page.categories.story?.done || 0}</td>
+                    </tr>
+                `;
+            });
+
+            dataHtml += `
+                    </tbody>
+                </table>
+            `;
+
+            // --- Other Platforms List/Table ---
+             dataHtml += `
+                <h2>অন্যান্য প্ল্যাটফর্ম ডেটা</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>প্ল্যাটফর্ম</th>
+                            <th>অ্যাকাউন্টের নাম</th>
+                            <th>টার্গেট</th>
+                            <th>সম্পন্ন</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+             `;
+
+            socialMediaData.otherPlatforms.forEach(account => {
+                 // Defensive check
+                 if (!account || typeof account.name !== 'string' || typeof account.platform !== 'string' || typeof account.target !== 'number' || typeof account.done !== 'number') return;
+
+                dataHtml += `
+                     <tr>
+                         <td>${account.platform}</td>
+                         <td>${account.name}</td>
+                         <td>${account.target}</td>
+                         <td>${account.done}</td>
+                     </tr>
+                `;
+            });
+
+             dataHtml += `
+                     </tbody>
+                 </table>
+             `;
+
+
+            // --- Close HTML ---
+            dataHtml += `
+                </body>
+                </html>
+            `;
+
+            // Open a new window and write the HTML
+            const printWindow = window.open('', '_blank');
+             if (!printWindow) {
+                 alert("পপআপ ব্লক করা হয়েছে। অনুগ্রহ করে পপআপ আনব্লক করে আবার চেষ্টা করুন।");
+                 console.error("Failed to open new window. Popup blocked?");
+                 return;
+             }
+
+            printWindow.document.open();
+            printWindow.document.write(dataHtml);
+            printWindow.document.close();
+
+             // Optional: Automatically trigger print dialog in the new window
+             printWindow.onload = function() {
+                  console.log("Data print window loaded, attempting to print...");
+                  printWindow.print();
+                  // Optional: Close window after print if desired (can be annoying)
+                  // printWindow.close();
+             };
+
+             console.log("Data print window opened.");
+         }
+
+
+        // --- Event Listeners ---
+
+         // Home button click handler
+         homeButton.addEventListener('click', () => {
+             console.log("Home button clicked. Scrolling to top.");
+             window.scrollTo({ top: 0, behavior: 'smooth' });
+         });
+
+         // Print PAGE button click handler (Renamed)
+         printPageButton.addEventListener('click', () => {
+             console.log("Print Page button clicked. Triggering window.print().");
+             window.print();
+         });
+
+         // Screenshot button click handler
+         screenshotButton.addEventListener('click', takeScreenshot);
+
+         // Print DATA button click handler (New)
+         printDataButton.addEventListener('click', printDataSummary);
+
+
+         // Optional Reset button click handler
+         // if (resetButton) {
+         //      resetButton.addEventListener('click', () => {
+         //          if (confirm("আপনি কি সত্যিই সমস্ত ডেটা রিসেট করতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।")) {
+         //              console.log("Reset button clicked. Clearing localStorage and resetting data.");
+         //              localStorage.removeItem(localStorageKey);
+         //               // Deep copy default data again
+         //              socialMediaData = JSON.parse(JSON.stringify(defaultDataStructure));
+         //              saveData(); // Save the default data
+         //              renderFacebookTable();
+         //              renderOtherPlatformsCards();
+         //              alert("সমস্ত ডেটা রিসেট করা হয়েছে।");
+         //          }
+         //      });
+         // }
+
+
+        // Event listener for Facebook Table editable cells
+        facebookTableBody.addEventListener('blur', function(event) {
+            const target = event.target;
+             console.log("Facebook table blur event fired.", event.target);
+            if (target.tagName === 'TD' && target.classList.contains('editable-done-category')) {
+                 console.log("Blur event on editable Facebook cell.");
+                const pageIndex = parseInt(target.dataset.pageIndex, 10);
+                const categoryKey = target.dataset.category;
+
+                // Basic validation of data attributes and data structure existence
+                 if (isNaN(pageIndex) || pageIndex < 0 || pageIndex >= socialMediaData.facebookPages.length || !socialMediaData.facebookPages[pageIndex].categories || !socialMediaData.facebookPages[pageIndex].categories[categoryKey]) {
+                     console.error("Invalid data attributes or missing data structure on Facebook table cell.", { pageIndex, categoryKey, data: socialMediaData.facebookPages });
+                      // Attempt to revert text content using existing (potentially old) data or default 0
+                     const originalValue = socialMediaData.facebookPages[pageIndex]?.categories[categoryKey]?.done || 0;
+                     target.textContent = originalValue;
+                     // No re-render needed on blur if validation fails, just revert text
+                     return;
+                 }
+
+                const page = socialMediaData.facebookPages[pageIndex];
+                const categoryData = page.categories[categoryKey];
+                const rawValue = target.textContent.trim();
+                const newValue = parseInt(rawValue, 10); // Parse the entered value
+                const oldValue = categoryData.done; // Get the current value from data
+
+                console.log(`Editing FB Page "${page.name}", Category "${facebookCategoryLabels[categoryKey]}". Old Value: ${oldValue}, Raw Input: "${rawValue}", Parsed New Value: ${newValue}`);
+
+
+                // Validate the parsed number
+                if (!isNaN(newValue) && newValue >= 0) {
+                     // For Facebook, 'done' should not exceed 'total'
+                     const validatedValue = Math.min(newValue, categoryData.total);
+                     console.log(`Input is valid (${newValue}). Validated Value (min with total ${categoryData.total}): ${validatedValue}`);
+
+
+                     if (validatedValue !== oldValue) { // Only update and save if the value actually changed
+                        categoryData.done = validatedValue; // Update the data structure
+                        saveData(); // Save changes to localStorage
+
+                        if (validatedValue !== newValue) {
+                             // If the value was capped, inform the user
+                             alert(`সম্পন্ন সংখ্যা মোট সংখ্যার (${categoryData.total}) বেশি হতে পারে না। তাই সম্পন্ন সংখ্যা ${validatedValue} করা হয়েছে।`);
+                        }
+
+                        // Re-render the table to update status colors, time left, and apply highlight
+                        renderFacebookTable(pageIndex, categoryKey);
+                        console.log(`Updated FB Page ${page.name}, Category ${facebookCategoryLabels[categoryKey]}: Done = ${validatedValue}`);
+                     } else {
+                         console.log("Value did not change. No save needed.");
+                         // Value is the same, just ensure display matches (in case user typed something like "00")
+                         target.textContent = oldValue;
+                         // No re-render needed if value didn't change
+                     }
+
+                } else {
+                    // Input is invalid (not a non-negative number)
+                    console.warn(`Invalid input "${rawValue}" ignored for FB Page ${page.name}, Category ${facebookCategoryLabels[categoryKey]}. Reverting.`);
+                    alert("অনুগ্রহ করে সম্পন্ন সংখ্যার জন্য সঠিক সংখ্যা লিখুন (০ বা তার বেশি)।");
+                    target.textContent = oldValue; // Revert the display text to the original value
+                    // No re-render needed if validation fails
+                }
+            }
+        }, true); // Use capture phase to ensure this listener runs early
+
+        // Event listener for Other Platforms Card editable spans (now uses array index)
+        otherPlatformsContainer.addEventListener('blur', function(event) {
+             const target = event.target;
+             console.log("Other platforms blur event fired.", event.target);
+             if (target.tagName === 'SPAN' && target.classList.contains('editable-done-card')) {
+                 console.log("Blur event on editable card span.");
+                const accountIndex = parseInt(target.dataset.accountIndex, 10); // Get index from data attribute
+
+                 // Basic validation of data attribute and data structure existence
+                 if (isNaN(accountIndex) || accountIndex < 0 || accountIndex >= socialMediaData.otherPlatforms.length || !socialMediaData.otherPlatforms[accountIndex]) {
+                      console.error("Invalid data attributes or missing data structure from card span.", { accountIndex, data: socialMediaData.otherPlatforms });
+                       // Attempt to revert text content using existing (potentially old) data or default 0
+                       const originalValue = socialMediaData.otherPlatforms[accountIndex]?.done || 0;
+                       target.textContent = originalValue;
+                       // No re-render needed
+                      return;
+                 }
+
+                 const account = socialMediaData.otherPlatforms[accountIndex]; // Get the specific account object
+                 const rawValue = target.textContent.trim();
+                 const newValue = parseInt(rawValue, 10); // Parse the entered value
+                 const oldValue = account.done; // Get the current value from data
+
+                 console.log(`Editing Platform Account "${account.name}" (Index: ${accountIndex}). Old Value: ${oldValue}, Raw Input: "${rawValue}", Parsed New Value: ${newValue}`);
+
+
+                 // Validate the parsed number
+                 if (!isNaN(newValue) && newValue >= 0) {
+                      // For cards, we allow done > target, so no upper limit validation needed here
+                      const validatedValue = newValue;
+
+                      if (validatedValue !== oldValue) { // Only update and save if the value actually changed
+                          account.done = validatedValue; // Update the data structure
+                          saveData(); // Save changes to localStorage
+
+                          // Re-render the cards to update status colors, progress text, and apply highlight
+                          renderOtherPlatformsCards(accountIndex); // Pass index for highlighting
+                          console.log(`Updated Platform Account ${account.name}: Done = ${validatedValue}`);
+                      } else {
+                           console.log("Value did not change. No save needed.");
+                           target.textContent = oldValue;
+                           // No re-render needed
+                      }
+                 } else {
+                     // Input is invalid (not a non-negative number)
+                     console.warn(`Invalid input "${rawValue}" ignored for Platform Account ${account.name}. Reverting.`);
+                     alert("অনুগ্রহ করে সম্পন্ন সংখ্যার জন্য সঠিক সংখ্যা লিখুন (০ বা তার বেশি)।");
+                     target.textContent = oldValue; // Revert the display text
+                     // No re-render needed
+                 }
+             }
+        }, true); // Use capture phase
+
+        // Handle 'Enter' key for both table and card edits (blur will trigger save)
+        document.addEventListener('keydown', function(event) {
+             const target = event.target;
+             // Check if the element is contenteditable and the key is Enter
+            if (target.isContentEditable && event.key === 'Enter') {
+                // Further check if it's one of our specific editable elements
+                 if (target.classList.contains('editable-done-category') || target.classList.contains('editable-done-card')) {
+                    event.preventDefault(); // Prevent new line in contenteditable
+                    console.log("Enter key pressed on editable element. Triggering blur.");
+                    target.blur(); // Trigger the 'blur' event which handles saving and validation
+                 }
+            }
+        });
+
+
+        // --- Initial setup ---
+        loadData(); // Load data when the page loads
+        renderFacebookTable(); // Render the Facebook table
+        renderOtherPlatformsCards(); // Render the Other Platforms cards
+        console.log("Initial render complete.");
+
+
+         // Optional: Function to clear localStorage for debugging if needed
+         // window.clearLocalStorage = function() {
+         //     if (confirm("এই ডেটা রিসেট অপশনটি শুধুমাত্র ডিবাগিং এর জন্য। আপনি কি সত্যিই লোকাল স্টোরেজ থেকে ডেটা মুছে ফেলতে চান?")) {
+         //         localStorage.removeItem(localStorageKey);
+         //         console.log("LocalStorage cleared.");
+         //         alert("লোকাল স্টোরেজ পরিষ্কার করা হয়েছে। পৃষ্ঠা রিলোড করুন।");
+         //         // You might want to reload the page or call loadData/render functions again
+         //         // location.reload();
+         //     }
+         // };
+
+
+    </script>
+
+</body>
+</html>
